@@ -4,5 +4,13 @@
   "description": "Automatically closes parentheses and similar characters.",
   "main": "index.js",
   "author": "Dennis Hackethal <engineering@dennishackethal.com>",
-  "license": "Adjusted MIT"
+  "license": "Adjusted MIT",
+  "homepage": "https://github.com/dchacke/autopair.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dchacke/autopair.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dchacke/autopair.js/issues"
+  }
 }
