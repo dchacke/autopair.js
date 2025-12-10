@@ -45,18 +45,31 @@ describe('Autopair insertion', () => {
     expect(textarea.selectionStart).toBe(1);
   });
 
-  test('does not autopair when caret is in front of a word', () => {
+  test('does not autopair in front of a word', () => {
     const textarea = document.createElement('textarea');
     textarea.value = 'word';
     textarea.selectionStart = textarea.selectionEnd = 0;
 
     autopair(textarea);
 
-    // Simulate typing '('
     const evt = new KeyboardEvent('keydown', { key: '(' });
     textarea.dispatchEvent(evt);
 
-    expect(textarea.value).toBe('word'); // should remain unchanged
+    expect(textarea.value).toBe('word'); // unchanged
+  });
+
+  test('autopairs before punctuation', () => {
+    const textarea = document.createElement('textarea');
+    textarea.value = ';';
+    textarea.selectionStart = textarea.selectionEnd = 0;
+
+    autopair(textarea);
+
+    const evt = new KeyboardEvent('keydown', { key: '(' });
+    textarea.dispatchEvent(evt);
+
+    expect(textarea.value).toBe('();');
+    expect(textarea.selectionStart).toBe(1);
   });
 
   test('wraps selected text with autopair', () => {
