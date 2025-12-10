@@ -12,5 +12,23 @@
   },
   "bugs": {
     "url": "https://github.com/dchacke/autopair.js/issues"
-  }
+  },
+  "keywords": [
+    "autopair",
+    "auto-pair",
+    "pairing",
+    "autocomplete",
+    "text",
+    "textarea",
+    "editor",
+    "brackets",
+    "parentheses",
+    "quotes",
+    "typethrough",
+    "markdown",
+    "syntax",
+    "input",
+    "javascript",
+    "web"
+  ]
 }
