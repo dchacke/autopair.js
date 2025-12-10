@@ -16,7 +16,17 @@
     // If using Node style exports in browser, we can attach manually for testing:
     // const autopair = window.autopair || module?.exports;
 
-    autopair(textarea);
+    autopair(textarea, {
+      '(': ')',
+      '[': ']',
+      '{': '}',
+      "'": "'",
+      '"': '"',
+      '‘': '’',
+      '“': '”',
+      '*': '*',
+      '_': '_'
+    });
   </script>
 </body>
 </html>
