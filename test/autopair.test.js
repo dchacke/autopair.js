@@ -110,4 +110,37 @@ describe('Autopair insertion', () => {
     expect(textarea.selectionStart).toBe(0);
     expect(textarea.selectionEnd).toBe(0);
   });
+
+  test('supports custom user-defined pairings', () => {
+    const textarea = document.createElement('textarea');
+    textarea.value = '';
+    textarea.selectionStart = textarea.selectionEnd = 0;
+
+    // Use custom pair: * => *
+    autopair(textarea, { '*': '*' });
+
+    // Simulate typing '*'
+    const evt = new KeyboardEvent('keydown', { key: '*' });
+    textarea.dispatchEvent(evt);
+
+    expect(textarea.value).toBe('**');
+    expect(textarea.selectionStart).toBe(1);
+    expect(textarea.selectionEnd).toBe(1);
+  });
+
+  test('wraps selection with custom pairing', () => {
+    const textarea = document.createElement('textarea');
+    textarea.value = 'bold';
+    textarea.selectionStart = 0;
+    textarea.selectionEnd = 4;
+
+    autopair(textarea, { '*': '*' });
+
+    const evt = new KeyboardEvent('keydown', { key: '*' });
+    textarea.dispatchEvent(evt);
+
+    expect(textarea.value).toBe('*bold*');
+    expect(textarea.selectionStart).toBe(1);
+    expect(textarea.selectionEnd).toBe(5);
+  });
 });
