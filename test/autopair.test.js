@@ -44,4 +44,18 @@ describe('Autopair insertion', () => {
     expect(textarea.value).toBe("''");
     expect(textarea.selectionStart).toBe(1);
   });
+
+  test('does not autopair when caret is in front of a word', () => {
+    const textarea = document.createElement('textarea');
+    textarea.value = 'word';
+    textarea.selectionStart = textarea.selectionEnd = 0;
+
+    autopair(textarea);
+
+    // Simulate typing '('
+    const evt = new KeyboardEvent('keydown', { key: '(' });
+    textarea.dispatchEvent(evt);
+
+    expect(textarea.value).toBe('word'); // should remain unchanged
+  });
 });
