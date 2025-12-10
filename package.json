@@ -4,5 +4,5 @@
   "description": "Automatically close special characters like parentheses.",
   "main": "index.js",
   "author": "Dennis Hackethal <engineering@dennishackethal.com>",
-  "license": "MIT"
+  "license": "Adjusted MIT"
 }
