@@ -45,4 +45,12 @@ function autopair(textarea, pairs = {
   });
 }
 
-module.exports = autopair;
+// Export for Node / Jest
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = autopair;
+}
+
+// Attach to window for browser
+if (typeof window !== 'undefined') {
+  window.autopair = autopair;
+}
