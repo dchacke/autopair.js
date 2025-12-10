@@ -78,4 +78,23 @@ describe('Autopair insertion', () => {
     expect(textarea.selectionStart).toBe(2);
     expect(textarea.selectionEnd).toBe(5);
   });
+
+  test('backspace deletes matching pair when caret is between them', () => {
+    const textarea = document.createElement('textarea');
+    textarea.value = '()';
+    textarea.selectionStart = 1; // caret between the parentheses
+    textarea.selectionEnd = 1;
+
+    autopair(textarea);
+
+    // Simulate pressing Backspace
+    const evt = new KeyboardEvent('keydown', { key: 'Backspace' });
+    textarea.dispatchEvent(evt);
+
+    // Expect both parentheses removed
+    expect(textarea.value).toBe('');
+    // Cursor should be at start
+    expect(textarea.selectionStart).toBe(0);
+    expect(textarea.selectionEnd).toBe(0);
+  });
 });
