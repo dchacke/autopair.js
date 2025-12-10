@@ -8,7 +8,7 @@ function autopair(textarea, pairs = {
   textarea.addEventListener('keydown', (evt) => {
     const { selectionStart: start, selectionEnd: end, value } = textarea;
 
-    // ---- Typethrough ----
+    // Typethrough
     if (start === end) {
       const next = value[end];
       const isClosing = Object.values(pairs).includes(evt.key);
@@ -31,8 +31,10 @@ function autopair(textarea, pairs = {
         textarea.selectionStart = start - 1;
         textarea.selectionEnd = start + 1;
         document.execCommand('insertText', false, '');
+
         return;
       }
+
       return; // normal backspace
     }
 
@@ -66,7 +68,7 @@ function autopair(textarea, pairs = {
   });
 }
 
-// Export for Node / Jest
+// Export for Node
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = autopair;
 }
