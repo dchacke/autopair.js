@@ -1,0 +1,11 @@
+{
+  "name": "autopair",
+  "version": "0.1.0",
+  "description": "Automatically close special characters like parentheses.",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "author": "Dennis Hackethal <engineering@dennishackethal.com>",
+  "license": "MIT"
+}
