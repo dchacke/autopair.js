@@ -8,6 +8,18 @@ function autopair(textarea, pairs = {
   textarea.addEventListener('keydown', (evt) => {
     const { selectionStart: start, selectionEnd: end, value } = textarea;
 
+    // ---- Typethrough ----
+    if (start === end) {
+      const next = value[end];
+      const isClosing = Object.values(pairs).includes(evt.key);
+
+      if (isClosing && next === evt.key) {
+        evt.preventDefault();
+        textarea.selectionStart = textarea.selectionEnd = end + 1;
+        return;
+      }
+    }
+
     // Handle backspace inside a direct pair
     if (evt.key === 'Backspace' && start === end && start > 0) {
       const left = value[start - 1];
