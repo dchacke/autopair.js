@@ -1,6 +1,6 @@
 {
   "name": "autopair",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Automatically closes parentheses and similar characters.",
   "main": "index.js",
   "author": "Dennis Hackethal <engineering@dennishackethal.com>",
