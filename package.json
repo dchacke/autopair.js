@@ -5,6 +5,10 @@
   "main": "index.js",
   "author": "Dennis Hackethal <engineering@dennishackethal.com>",
   "license": "Adjusted MIT",
+  "type": "module",
+  "exports": {
+    "import": "./src/autopair.js"
+  },
   "homepage": "https://github.com/dchacke/autopair.js",
   "repository": {
     "type": "git",
