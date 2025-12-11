@@ -1,4 +1,4 @@
-function autopair(textarea, pairs = {
+export default function autopair(textarea, pairs = {
   '(': ')',
   '[': ']',
   '{': '}',
@@ -66,14 +66,4 @@ function autopair(textarea, pairs = {
     document.execCommand('insertText', false, evt.key + closing);
     textarea.selectionStart = textarea.selectionEnd = start + 1;
   });
-}
-
-// Export for Node
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = autopair;
-}
-
-// Attach to window for browser
-if (typeof window !== 'undefined') {
-  window.autopair = autopair;
 }

@@ -43,3 +43,7 @@ npm install autopair
   });
 </script>
 ```
+
+## Development
+
+Run a webserver and open `index.html`.
