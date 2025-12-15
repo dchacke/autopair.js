@@ -29,8 +29,12 @@ npm install autopair
 ## Usage
 
 ```html
-<script src="path/to/autopair.js"></script>
-<script>
+<textarea id="editor"></textarea>
+
+<script type="module">
+  import autopair from '/path/to/autopair.js';
+
+  // Use the autopair module
   const textarea = document.getElementById('editor');
 
   // Autopair with default pairings:
