@@ -56,6 +56,10 @@ npm install autopair
     '“': '”',
     '*': '*' // For markdown italics
   });
+
+  // Teardown, ie remove autopair.js functionality
+  let teardown = autopair(textarea);
+  teardown();
 </script>
 ```
 

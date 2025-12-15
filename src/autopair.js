@@ -5,7 +5,7 @@ export default function autopair(textarea, pairs = {
   "'": "'",
   '"': '"'
 }) {
-  textarea.addEventListener('keydown', (evt) => {
+  let handler = evt => {
     const { selectionStart: start, selectionEnd: end, value } = textarea;
 
     // Typethrough
@@ -65,5 +65,11 @@ export default function autopair(textarea, pairs = {
     textarea.selectionStart = textarea.selectionEnd = start;
     document.execCommand('insertText', false, evt.key + closing);
     textarea.selectionStart = textarea.selectionEnd = start + 1;
-  });
+  };
+
+  textarea.addEventListener('keydown', handler);
+
+  return () => {
+    textarea.removeEventListener('keydown', handler);
+  };
 }
