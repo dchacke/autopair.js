@@ -55,11 +55,27 @@ export default function autopair(textarea, pairs = {
       return;
     }
 
-    // Only autopair if next char is whitespace, punctuation, or a closing of the same type
     const nextChar = value[end] || '';
+    const prevChar = value[start - 1] || '';
+
     const insidePair = closing === nextChar;
     const safeNext = !isWordChar.test(nextChar) || punctuation.test(nextChar);
-    if (!insidePair && !safeNext) return;
+    const isSymmetric = evt.key === closing;
+
+    // Autoclose only when allowed
+    if (
+      !insidePair &&
+      (
+        !safeNext ||
+        (
+          isSymmetric &&
+          start === end &&
+          isWordChar.test(prevChar)
+        )
+      )
+    ) {
+      return;
+    }
 
     evt.preventDefault();
     textarea.selectionStart = textarea.selectionEnd = start;
