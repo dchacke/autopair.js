@@ -2,7 +2,7 @@
   "name": "autopair",
   "version": "1.2.0",
   "description": "Automatically closes parentheses and similar characters.",
-  "main": "index.js",
+  "main": "src/autopair.js",
   "author": "Dennis Hackethal <engineering@dennishackethal.com>",
   "license": "Adjusted MIT",
   "type": "module",
