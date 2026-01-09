@@ -70,7 +70,10 @@ export default function autopair(textarea, pairs = {
         (
           isSymmetric &&
           start === end &&
-          isWordChar.test(prevChar)
+          (
+            isWordChar.test(prevChar) || // end of word
+            prevChar === evt.key         // repeated quote
+          )
         )
       )
     ) {
