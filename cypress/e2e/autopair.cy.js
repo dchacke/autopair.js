@@ -159,34 +159,16 @@ describe('autopair', () => {
     });
   });
 
-  it('handles custom pairing correctly', () => {
+  it('autopairs existing custom quotes “ and ”', () => {
     cy.visit('/index.html');
 
-    // Inject autopair immediately
-    cy.document().then(doc => {
-      const script = doc.createElement('script');
-      script.type = 'module';
-      script.textContent = `
-        import autopair from './autopair.js';
-        autopair(document.querySelector('textarea'), {
-          '(': ')',
-          '[': ']',
-          '{': '}',
-          "'": "'",
-          '"': '"',
-          '<': '>'
-        });
-      `;
-      doc.body.appendChild(script);
-    });
+    // Type opening custom quote
+    cy.get('textarea').type('“');
 
-    // Type <
-    cy.get('textarea').type('<');
-
-    // Should autopair to <>
+    // Should autopair to “”
     cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('<>');
-      expect($el[0].selectionStart).to.eq(1);
+      expect($el.val()).to.eq('“”');
+      expect($el[0].selectionStart).to.eq(1); // cursor inside
     });
   });
 
