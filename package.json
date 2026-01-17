@@ -34,5 +34,11 @@
     "input",
     "javascript",
     "web"
-  ]
+  ],
+  "devDependencies": {
+    "cypress": "^15.9.0"
+  },
+  "scripts": {
+    "test": "npx cypress run"
+  }
 }
