@@ -41,9 +41,6 @@ export default function autopair(textarea, pairs = {
     const closing = pairs[evt.key];
     if (!closing) return;
 
-    const isWordChar = /[\w]/;
-    const punctuation = /[;,.})\]]/;
-
     // Wrap selection if present
     if (start !== end) {
       evt.preventDefault();
@@ -55,28 +52,15 @@ export default function autopair(textarea, pairs = {
       return;
     }
 
+    const nextCharWhitelist = /[\s;})\]]/;
     const nextChar = value[end] || '';
     const prevChar = value[start - 1] || '';
-
     const insidePair = closing === nextChar;
-    const safeNext = !isWordChar.test(nextChar) || punctuation.test(nextChar);
+    const safeNext = nextChar === '' || nextCharWhitelist.test(nextChar);
     const isSymmetric = evt.key === closing;
 
     // Autoclose only when allowed
-    if (
-      !insidePair &&
-      (
-        !safeNext ||
-        (
-          isSymmetric &&
-          start === end &&
-          (
-            isWordChar.test(prevChar) || // end of word
-            prevChar === evt.key         // repeated quote
-          )
-        )
-      )
-    ) {
+    if (!insidePair && (!safeNext || (isSymmetric && start === end && prevChar === evt.key))) {
       return;
     }
 
