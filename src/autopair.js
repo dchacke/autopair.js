@@ -8,23 +8,16 @@ export default function autopair(textarea, pairs = {
   const openings = Object.keys(pairs);
   const closings = Object.values(pairs);
 
-  const insertText = text => {
-    document.execCommand('insertText', false, text);
-  }
+  const insertText = (text) => document.execCommand('insertText', false, text);
 
   let handler = evt => {
     const { selectionStart: start, selectionEnd: end, value } = textarea;
 
     // Typethrough
-    if (start === end) {
-      const next = value[end];
-      const isClosing = closings.includes(evt.key);
-
-      if (isClosing && next === evt.key) {
-        evt.preventDefault();
-        textarea.selectionStart = textarea.selectionEnd = end + 1;
-        return;
-      }
+    if (start === end && closings.includes(evt.key) && value[end] === evt.key) {
+      evt.preventDefault();
+      textarea.selectionStart = textarea.selectionEnd = end + 1;
+      return;
     }
 
     // Handle backspace inside a direct pair
