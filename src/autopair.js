@@ -5,13 +5,16 @@ export default function autopair(textarea, pairs = {
   "'": "'",
   '"': '"'
 }) {
+  const openings = Object.keys(pairs);
+  const closings = Object.values(pairs);
+
   let handler = evt => {
     const { selectionStart: start, selectionEnd: end, value } = textarea;
 
     // Typethrough
     if (start === end) {
       const next = value[end];
-      const isClosing = Object.values(pairs).includes(evt.key);
+      const isClosing = closings.includes(evt.key);
 
       if (isClosing && next === evt.key) {
         evt.preventDefault();
@@ -24,7 +27,7 @@ export default function autopair(textarea, pairs = {
     if (evt.key === 'Backspace' && start === end && start > 0) {
       const left = value[start - 1];
       const right = value[start];
-      const opening = Object.keys(pairs).find(k => pairs[k] === right);
+      const opening = openings.find(k => pairs[k] === right);
       if (left === opening) {
         evt.preventDefault();
         // Select the pair and delete in one go
