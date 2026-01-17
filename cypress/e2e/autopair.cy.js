@@ -189,4 +189,23 @@ describe('autopair', () => {
       expect($el[0].selectionStart).to.eq(1);
     });
   });
+
+  it('supports undo and redo after typing a pair', () => {
+    cy.visit('/index.html');
+
+    // Type a pair
+    cy.get('textarea').type('()');
+
+    // Undo
+    cy.get('textarea').then($el => {
+      $el[0].ownerDocument.execCommand('undo');
+    });
+    cy.get('textarea').should('have.value', '');
+
+    // Redo
+    cy.get('textarea').then($el => {
+      $el[0].ownerDocument.execCommand('redo');
+    });
+    cy.get('textarea').should('have.value', '()');
+  });
 });
