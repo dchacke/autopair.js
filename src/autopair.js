@@ -8,6 +8,10 @@ export default function autopair(textarea, pairs = {
   const openings = Object.keys(pairs);
   const closings = Object.values(pairs);
 
+  const insertText = text => {
+    document.execCommand('insertText', false, text);
+  }
+
   let handler = evt => {
     const { selectionStart: start, selectionEnd: end, value } = textarea;
 
@@ -33,7 +37,7 @@ export default function autopair(textarea, pairs = {
         // Select the pair and delete in one go
         textarea.selectionStart = start - 1;
         textarea.selectionEnd = start + 1;
-        document.execCommand('insertText', false, '');
+        insertText('');
 
         return;
       }
@@ -49,7 +53,7 @@ export default function autopair(textarea, pairs = {
       evt.preventDefault();
       textarea.selectionStart = start;
       textarea.selectionEnd = end;
-      document.execCommand('insertText', false, evt.key + value.slice(start, end) + closing);
+      insertText(evt.key + value.slice(start, end) + closing);
       textarea.selectionStart = start + 1;
       textarea.selectionEnd = end + 1;
       return;
@@ -69,7 +73,7 @@ export default function autopair(textarea, pairs = {
 
     evt.preventDefault();
     textarea.selectionStart = textarea.selectionEnd = start;
-    document.execCommand('insertText', false, evt.key + closing);
+    insertText(evt.key + closing);
     textarea.selectionStart = textarea.selectionEnd = start + 1;
   };
 
