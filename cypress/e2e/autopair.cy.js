@@ -93,6 +93,7 @@ describe('autopair', () => {
     cy.get('textarea').then($el => {
       expect($el.val()).to.eq('();');
       expect($el[0].selectionStart).to.eq(1);
+      expect($el[0].selectionEnd).to.eq(1);
     });
   });
 
@@ -115,6 +116,7 @@ describe('autopair', () => {
     cy.get('textarea').then($el => {
       expect($el.val()).to.eq('(.');
       expect($el[0].selectionStart).to.eq(1);
+      expect($el[0].selectionEnd).to.eq(1);
     });
   });
 
@@ -128,6 +130,7 @@ describe('autopair', () => {
     cy.get('textarea').then($el => {
       expect($el.val()).to.eq('((()))');
       expect($el[0].selectionStart).to.eq(3); // cursor inside the innermost pair
+      expect($el[0].selectionEnd).to.eq(3);
     });
   });
 
@@ -141,6 +144,7 @@ describe('autopair', () => {
     cy.get('textarea').then($el => {
       expect($el.val()).to.eq("''");
       expect($el[0].selectionStart).to.eq(1); // cursor inside
+      expect($el[0].selectionEnd).to.eq(1);
     });
 
     // Move cursor to the end
@@ -156,6 +160,7 @@ describe('autopair', () => {
     cy.get('textarea').then($el => {
       expect($el.val()).to.eq("'''");
       expect($el[0].selectionStart).to.eq(3); // cursor after last '
+      expect($el[0].selectionEnd).to.eq(3);
     });
   });
 
@@ -169,6 +174,7 @@ describe('autopair', () => {
     cy.get('textarea').then($el => {
       expect($el.val()).to.eq('“”');
       expect($el[0].selectionStart).to.eq(1); // cursor inside
+      expect($el[0].selectionEnd).to.eq(1);
     });
   });
 
