@@ -8,7 +8,10 @@ export default function autopair(textarea, pairs = {
   const openings = Object.keys(pairs);
   const closings = Object.values(pairs);
 
-  const insertText = (text) => document.execCommand('insertText', false, text);
+  const insertText = text => document.execCommand('insertText', false, text);
+  const setCursor = pos => {
+    textarea.selectionStart = textarea.selectionEnd = pos;
+  };
 
   let handler = evt => {
     const { selectionStart: start, selectionEnd: end, value } = textarea;
@@ -16,7 +19,7 @@ export default function autopair(textarea, pairs = {
     // Typethrough
     if (start === end && closings.includes(evt.key) && value[end] === evt.key) {
       evt.preventDefault();
-      textarea.selectionStart = textarea.selectionEnd = end + 1;
+      setCursor(end + 1);
       return;
     }
 
@@ -31,7 +34,6 @@ export default function autopair(textarea, pairs = {
         textarea.selectionStart = start - 1;
         textarea.selectionEnd = start + 1;
         insertText('');
-
         return;
       }
 
@@ -47,8 +49,7 @@ export default function autopair(textarea, pairs = {
       textarea.selectionStart = start;
       textarea.selectionEnd = end;
       insertText(evt.key + value.slice(start, end) + closing);
-      textarea.selectionStart = start + 1;
-      textarea.selectionEnd = end + 1;
+      setCursor(start + 1);
       return;
     }
 
@@ -65,9 +66,8 @@ export default function autopair(textarea, pairs = {
     }
 
     evt.preventDefault();
-    textarea.selectionStart = textarea.selectionEnd = start;
     insertText(evt.key + closing);
-    textarea.selectionStart = textarea.selectionEnd = start + 1;
+    setCursor(start + 1);
   };
 
   textarea.addEventListener('keydown', handler);
