@@ -196,4 +196,56 @@ describe('autopair', () => {
     });
     cy.get('textarea').should('have.value', '()');
   });
-});
+
+  it('does not autopair a symmetric character behind a word character', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('hello');
+    cy.get('textarea').type("'");
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq("hello'");
+      expect($el[0].selectionStart).to.eq(6);
+      expect($el[0].selectionEnd).to.eq(6);
+    });
+  });
+
+  it('does autopair a symmetric character behind a non-word character', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('hello.');
+    cy.get('textarea').type("'");
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq("hello.''");
+      expect($el[0].selectionStart).to.eq(7);
+      expect($el[0].selectionEnd).to.eq(7);
+    });
+  });
+
+  it('does autopair a symmetric character behind a newline', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('\n');
+    cy.get('textarea').type("'");
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq("\n''");
+      expect($el[0].selectionStart).to.eq(2);
+      expect($el[0].selectionEnd).to.eq(2);
+    });
+  });
+
+  it('does autopair an asymmetric character behind a word character', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('hello');
+    cy.get('textarea').type("(");
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq("hello()");
+      expect($el[0].selectionStart).to.eq(6);
+      expect($el[0].selectionEnd).to.eq(6);
+    });
+  });
+ });
