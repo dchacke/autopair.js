@@ -63,6 +63,10 @@ npm install autopair
 </script>
 ```
 
+## Contributing
+
+Report issues on the [Veritula issue tracker](https://veritula.com/discussions/autopair-js). Do not submit issues on GitHub.
+
 ## Development
 
 Run a webserver and open `index.html`.
