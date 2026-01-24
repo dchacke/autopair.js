@@ -53,7 +53,8 @@ export default function autopair(textarea, pairs = {
       textarea.selectionStart = start;
       textarea.selectionEnd = end;
       insertText(evt.key + value.slice(start, end) + closing);
-      setCursor(start + 1);
+      setCursor(end + 1);
+
       return;
     }
 

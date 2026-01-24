@@ -15,7 +15,11 @@ describe('autopair', () => {
     cy.get('textarea').type('(');
 
     // Check result
-    cy.get('textarea').should('have.value', '(hello)');
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('(hello)');
+      expect($el[0].selectionStart).to.eq(6); // cursor after )
+      expect($el[0].selectionEnd).to.eq(6);
+    });
   });
 
   it('types through closing character', () => {
