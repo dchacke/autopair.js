@@ -50,10 +50,11 @@ export default function autopair(textarea, pairs = {
     // Wrap selection if present
     if (start !== end) {
       evt.preventDefault();
-      textarea.selectionStart = start;
-      textarea.selectionEnd = end;
+
       insertText(evt.key + value.slice(start, end) + closing);
-      setCursor(end + 1);
+
+      textarea.selectionStart = start + 1;
+      textarea.selectionEnd = end + 1;
 
       return;
     }
