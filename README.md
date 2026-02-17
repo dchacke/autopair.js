@@ -67,6 +67,10 @@ npm install autopair
 
 Report issues on the [Veritula issue tracker](https://veritula.com/discussions/autopair-js). Do not submit issues on GitHub.
 
+## Bug bounty program
+
+There’s a [Veritula bug bounty program](https://veritula.com/bounties/10) for autopair.js. Report bugs there, not on GitHub.
+
 ## Development
 
 Run a webserver and open `index.html`.
