@@ -67,7 +67,7 @@ export default function autopair(textarea, pairs = {
     let isSymmetric = evt.key === closing;
 
     // Autoclose only when allowed
-    if (!insidePair && (!safeNext || (isSymmetric && (start !== end || prevChar === evt.key || /\w/.test(prevChar))))) {
+    if (!insidePair && (!safeNext || (isSymmetric && (prevChar === evt.key || /\w/.test(prevChar))))) {
       return;
     }
 
