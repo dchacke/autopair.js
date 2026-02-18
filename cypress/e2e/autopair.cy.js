@@ -244,10 +244,10 @@ describe('autopair', () => {
     cy.visit('/index.html');
 
     cy.get('textarea').type('hello');
-    cy.get('textarea').type("(");
+    cy.get('textarea').type('(');
 
     cy.get('textarea').then($el => {
-      expect($el.val()).to.eq("hello()");
+      expect($el.val()).to.eq('hello()');
       expect($el[0].selectionStart).to.eq(6);
       expect($el[0].selectionEnd).to.eq(6);
     });
