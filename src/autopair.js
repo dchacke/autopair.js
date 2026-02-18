@@ -5,76 +5,67 @@ export default function autopair(textarea, pairs = {
   "'": "'",
   '"': '"'
 }) {
-  let openings = Object.keys(pairs);
-  let closings = Object.values(pairs);
+  const closingFor = new Map(Object.entries(pairs));
+  const openingFor = new Map(Object.entries(pairs).map(([k, v]) => [v, k]));
 
-  let insertText = text => document.execCommand('insertText', false, text);
-  let setCursor = pos => {
-    textarea.selectionStart = textarea.selectionEnd = pos;
+  const insertText = text => document.execCommand('insertText', false, text);
+  const setSelection = (start, end) => {
+    textarea.selectionStart = start;
+    textarea.selectionEnd = end;
   };
 
-  let handler = evt => {
-    let { selectionStart: start, selectionEnd: end, value } = textarea;
+  const handler = evt => {
+    const { selectionStart: start, selectionEnd: end, value } = textarea;
 
-    // Typethrough
-    if (start === end && closings.includes(evt.key) && value[end] === evt.key) {
+    // Typethrough: move cursor past an existing closing char
+    if (start === end && openingFor.has(evt.key) && value[end] === evt.key) {
       evt.preventDefault();
-      setCursor(end + 1);
+      setSelection(end + 1, end + 1);
+
       return;
     }
 
-    // Handle backspace inside a direct pair
+    // Backspace inside a direct pair
     if (evt.key === 'Backspace' && start === end && start > 0) {
-      let left = value[start - 1];
-      let right = value[start];
-      let opening = openings.find(k => pairs[k] === right);
+      const left = value[start - 1];
+      const right = value[start];
+      const opening = openingFor.get(right);
 
       if (left === opening) {
         evt.preventDefault();
-
-        // Select the pair and delete in one go
-        textarea.selectionStart = start - 1;
-        textarea.selectionEnd = start + 1;
-
+        setSelection(start - 1, start + 1);
         insertText('');
 
         return;
       }
-
-      return; // normal backspace
     }
 
-    let closing = pairs[evt.key];
+    const closing = closingFor.get(evt.key);
     if (!closing) return;
 
-    // Wrap selection if present
+    // Wrap selection
     if (start !== end) {
       evt.preventDefault();
-
       insertText(evt.key + value.slice(start, end) + closing);
-
-      textarea.selectionStart = start + 1;
-      textarea.selectionEnd = end + 1;
+      setSelection(start + 1, end + 1);
 
       return;
     }
 
-    let nextCharWhitelist = /[\s;})\]]/;
-    let nextChar = value[end] || '';
-    let prevChar = value[start - 1] || '';
-    let insidePair = closing === nextChar;
-    let safeNext = nextChar === '' || nextCharWhitelist.test(nextChar);
-    let isSymmetric = evt.key === closing;
+    // Autoclose single characters when typing next to a safe context
+    const nextChar = value[end] || '';
+    const prevChar = value[start - 1] || '';
+    const insidePair = closing === nextChar;
+    const safeNext = nextChar === '' || /[\s;})\]]/.test(nextChar);
+    const isSymmetric = evt.key === closing;
 
-    // Autoclose only when allowed
     if (!insidePair && (!safeNext || (isSymmetric && (prevChar === evt.key || /\w/.test(prevChar))))) {
       return;
     }
 
     evt.preventDefault();
-
     insertText(evt.key + closing);
-    setCursor(start + 1);
+    setSelection(start + 1, start + 1);
   };
 
   textarea.addEventListener('keydown', handler);
