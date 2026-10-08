@@ -3,16 +3,20 @@
 // for backticks, asterisks and underscores. Regexes are copied from those
 // keymaps. Like Sublime's preceding_text/following_text, they are tested
 // against the text between the caret and the start/end of its line.
+// Custom pairs override the Markdown package's rules.
 
 const QUOTE_FOLLOWING = /^(?:\t| |\)|]|\}|>|$)/;
 const BRACKET_FOLLOWING = /^(?:\t| |\)|]|;|\}|$)/;
 
-const SUBLIME_RULES = {
+const DEFAULT_PACKAGE_RULES = {
   '(': { following: BRACKET_FOLLOWING },
   '[': { following: BRACKET_FOLLOWING },
   '{': { following: /^(?:\t| |\)|]|\}|$)/ },
   '"': { following: QUOTE_FOLLOWING, preceding: /["a-zA-Z0-9_]$/ },
-  "'": { following: QUOTE_FOLLOWING, preceding: /['a-zA-Z0-9_]$/ },
+  "'": { following: QUOTE_FOLLOWING, preceding: /['a-zA-Z0-9_]$/ }
+};
+
+const MARKDOWN_PACKAGE_RULES = {
   '`': {
     following: /^(?:\t| |\)|]|\}|\.|,|$)/,
     // Sublime's \w is Unicode-aware
@@ -26,8 +30,8 @@ const SUBLIME_RULES = {
 
 const escapeRegExp = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// Pairs Sublime doesn't know get the rules of its closest equivalent:
-// symmetric pairs behave like quotes, asymmetric ones like brackets.
+// Other pairs get the rules of their closest equivalent in the Default
+// package: symmetric pairs behave like quotes, asymmetric ones like brackets.
 const genericRule = (opening, closing) => opening === closing
   ? {
     following: QUOTE_FOLLOWING,
@@ -64,7 +68,7 @@ const inFencedCode = (value, pos) => {
 // Approximates Sublime's inline markup.raw scope
 const inInlineCode = lineBefore => (lineBefore.match(/`/g) || []).length % 2 === 1;
 
-export default function autopair(textarea, pairs = {
+const DEFAULT_PAIRS = {
   '(': ')',
   '[': ']',
   '{': '}',
@@ -73,10 +77,15 @@ export default function autopair(textarea, pairs = {
   '`': '`',
   '*': '*',
   '_': '_'
-}) {
-  const rules = new Map(Object.entries(pairs).map(([opening, closing]) => [
+};
+
+export default function autopair(textarea, pairs) {
+  const sublimeRules = pairs
+    ? DEFAULT_PACKAGE_RULES
+    : { ...DEFAULT_PACKAGE_RULES, ...MARKDOWN_PACKAGE_RULES };
+  const rules = new Map(Object.entries(pairs || DEFAULT_PAIRS).map(([opening, closing]) => [
     opening,
-    { opening, closing, ...(SUBLIME_RULES[opening] || genericRule(opening, closing)) }
+    { opening, closing, ...(sublimeRules[opening] || genericRule(opening, closing)) }
   ]));
   const rulesByClosing = new Map([...rules.values()].map(rule => [rule.closing, rule]));
 

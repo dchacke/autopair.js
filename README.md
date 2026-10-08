@@ -10,7 +10,7 @@ Behaves like Sublime Text's auto-pairing in Markdown mode.
 
    ![Automatically close parentheses](./images/autoclose.gif)
 
-2. Wraps selected text. For example, selecting a word and hitting `(` will wrap the word in parentheses. Asterisks and underscores only wrap selected text; they are not closed automatically.
+2. Wraps selected text. For example, selecting a word and hitting `(` will wrap the word in parentheses. By default, asterisks and underscores only wrap selected text; they are not closed automatically.
 
    ![Wrap selected text](./images/wrap.gif)
 
@@ -50,7 +50,9 @@ npm install autopair
   // '_': '_'
   autopair(textarea);
 
-  // When defining custom pairings, include the defaults
+  // When defining custom pairings, include the defaults. Custom pairs
+  // override Sublime's Markdown rules: backticks, asterisks and underscores
+  // then close automatically like quotes.
   autopair(textarea, {
     '(': ')',
     '[': ']',

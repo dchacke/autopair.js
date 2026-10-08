@@ -17,7 +17,10 @@
     // If using Node style exports in browser, we can attach manually for testing:
     // const autopair = window.autopair || module?.exports;
 
-    autopair(textarea, {
+    // Visit index.html?defaults to test the default pairs
+    const useDefaults = new URLSearchParams(location.search).has('defaults');
+
+    autopair(textarea, useDefaults ? undefined : {
       '(': ')',
       '[': ']',
       '{': '}',

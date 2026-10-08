@@ -316,8 +316,20 @@ describe('autopair', () => {
     cy.get('textarea').should('have.value', ')');
   });
 
-  it('only wraps with asterisks', () => {
+  it('autopairs asterisks when configured', () => {
     cy.visit('/index.html');
+
+    cy.get('textarea').type('*');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('**');
+      expect($el[0].selectionStart).to.eq(1);
+      expect($el[0].selectionEnd).to.eq(1);
+    });
+  });
+
+  it('only wraps with asterisks by default', () => {
+    cy.visit('/index.html?defaults');
 
     // No autoclose
     cy.get('textarea').type('*');
@@ -341,7 +353,7 @@ describe('autopair', () => {
   });
 
   it('autopairs backticks and types through them', () => {
-    cy.visit('/index.html');
+    cy.visit('/index.html?defaults');
 
     cy.get('textarea').type('`');
 
@@ -359,7 +371,7 @@ describe('autopair', () => {
   });
 
   it('does not autopair a backtick behind a word character', () => {
-    cy.visit('/index.html');
+    cy.visit('/index.html?defaults');
 
     cy.get('textarea').type('hello`');
 
@@ -367,7 +379,7 @@ describe('autopair', () => {
   });
 
   it('types a code fence and does not autopair backticks inside it', () => {
-    cy.visit('/index.html');
+    cy.visit('/index.html?defaults');
 
     cy.get('textarea').type('```\n`');
 
