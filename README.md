@@ -2,13 +2,15 @@
 
 Lightweight autopairing + typethrough behavior for HTML `input[type=text]` and `textarea`. No dependencies. Preserves the undo/redo stack.
 
+Behaves like Sublime Text's auto-pairing in Markdown mode.
+
 ## Features
 
-1. Automatically closes parentheses, brackets, curly braces, single quotes, and double quotes.
+1. Automatically closes parentheses, brackets, curly braces, single quotes, double quotes, and backticks.
 
    ![Automatically close parentheses](./images/autoclose.gif)
 
-2. Wraps selected text. For example, selecting a word and hitting `(` will wrap the word in parentheses.
+2. Wraps selected text. For example, selecting a word and hitting `(` will wrap the word in parentheses. Asterisks and underscores only wrap selected text; they are not closed automatically.
 
    ![Wrap selected text](./images/wrap.gif)
 
@@ -42,7 +44,10 @@ npm install autopair
   // '[': ']',
   // '{': '}',
   // "'": "'",
-  // '"': '"'
+  // '"': '"',
+  // '`': '`',
+  // '*': '*',
+  // '_': '_'
   autopair(textarea);
 
   // When defining custom pairings, include the defaults
@@ -52,9 +57,11 @@ npm install autopair
     '{': '}',
     "'": "'",
     '"': '"',
+    '`': '`',
+    '*': '*',
+    '_': '_',
     '‘': '’', // Curly quotes
-    '“': '”',
-    '*': '*' // For markdown italics
+    '“': '”'
   });
 
   // Teardown, ie remove autopair.js functionality from an element

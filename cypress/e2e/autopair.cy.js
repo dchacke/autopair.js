@@ -252,4 +252,125 @@ describe('autopair', () => {
       expect($el[0].selectionEnd).to.eq(6);
     });
   });
+
+  it('does not autopair a curly brace before a semicolon', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type(';');
+
+    cy.get('textarea').then($el => {
+      $el[0].selectionStart = 0;
+      $el[0].selectionEnd = 0;
+    });
+
+    cy.get('textarea').type('{{}');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('{;');
+      expect($el[0].selectionStart).to.eq(1);
+    });
+  });
+
+  it('does not autopair a quote before a semicolon', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type(';');
+
+    cy.get('textarea').then($el => {
+      $el[0].selectionStart = 0;
+      $el[0].selectionEnd = 0;
+    });
+
+    cy.get('textarea').type('"');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('";');
+      expect($el[0].selectionStart).to.eq(1);
+    });
+  });
+
+  it('autopairs a quote before an angle bracket', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('>');
+
+    cy.get('textarea').then($el => {
+      $el[0].selectionStart = 0;
+      $el[0].selectionEnd = 0;
+    });
+
+    cy.get('textarea').type('"');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('"">');
+      expect($el[0].selectionStart).to.eq(1);
+    });
+  });
+
+  it('does not delete a pair on backspace with a modifier', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('(');
+    cy.get('textarea').type('{ctrl}{backspace}');
+
+    cy.get('textarea').should('have.value', ')');
+  });
+
+  it('only wraps with asterisks', () => {
+    cy.visit('/index.html');
+
+    // No autoclose
+    cy.get('textarea').type('*');
+    cy.get('textarea').should('have.value', '*');
+
+    cy.get('textarea').type('{backspace}hello');
+
+    cy.get('textarea').then($el => {
+      $el[0].selectionStart = 0;
+      $el[0].selectionEnd = 5;
+    });
+
+    // Wrap
+    cy.get('textarea').type('*');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('*hello*');
+      expect($el[0].selectionStart).to.eq(1);
+      expect($el[0].selectionEnd).to.eq(6);
+    });
+  });
+
+  it('autopairs backticks and types through them', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('`');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('``');
+      expect($el[0].selectionStart).to.eq(1);
+    });
+
+    cy.get('textarea').type('code`');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('`code`');
+      expect($el[0].selectionStart).to.eq(6);
+    });
+  });
+
+  it('does not autopair a backtick behind a word character', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('hello`');
+
+    cy.get('textarea').should('have.value', 'hello`');
+  });
+
+  it('types a code fence and does not autopair backticks inside it', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('```\n`');
+
+    cy.get('textarea').should('have.value', '```\n`');
+  });
  });
