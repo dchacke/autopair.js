@@ -201,6 +201,57 @@ describe('autopair', () => {
     cy.get('textarea').should('have.value', '()');
   });
 
+  it('restores the cursor inside a pair on redo', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('(');
+
+    cy.get('textarea').then($el => {
+      $el[0].ownerDocument.execCommand('undo');
+      $el[0].ownerDocument.execCommand('redo');
+
+      expect($el.val()).to.eq('()');
+      expect($el[0].selectionStart).to.eq(1);
+      expect($el[0].selectionEnd).to.eq(1);
+    });
+  });
+
+  it('restores the wrapped selection on redo', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('hello');
+
+    cy.get('textarea').then($el => {
+      $el[0].selectionStart = 0;
+      $el[0].selectionEnd = 5;
+    });
+
+    cy.get('textarea').type('(');
+
+    cy.get('textarea').then($el => {
+      $el[0].ownerDocument.execCommand('undo');
+      $el[0].ownerDocument.execCommand('redo');
+
+      expect($el.val()).to.eq('(hello)');
+      expect($el[0].selectionStart).to.eq(1);
+      expect($el[0].selectionEnd).to.eq(6);
+    });
+  });
+
+  it('restores the cursor inside a deleted pair on undo', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('({backspace}');
+
+    cy.get('textarea').then($el => {
+      $el[0].ownerDocument.execCommand('undo');
+
+      expect($el.val()).to.eq('()');
+      expect($el[0].selectionStart).to.eq(1);
+      expect($el[0].selectionEnd).to.eq(1);
+    });
+  });
+
   it('does not autopair a symmetric character behind a word character', () => {
     cy.visit('/index.html');
 

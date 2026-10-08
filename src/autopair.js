@@ -68,6 +68,9 @@ const inFencedCode = (value, pos) => {
 // Approximates Sublime's inline markup.raw scope
 const inInlineCode = lineBefore => (lineBefore.match(/`/g) || []).length % 2 === 1;
 
+// Number of edits whose selection is restored on undo/redo
+const HISTORY_SIZE = 100;
+
 const DEFAULT_PAIRS = {
   '(': ')',
   '[': ']',
@@ -95,6 +98,38 @@ export default function autopair(textarea, pairs) {
     textarea.selectionEnd = end;
   };
 
+  // On undo, browsers restore the selection from before an edit, and on redo
+  // they put the caret after the inserted text, ignoring where autopair moved
+  // it. Remember the intended selections so undo/redo can restore them.
+  const history = [];
+
+  const replace = (start, end, text, selectionStart, selectionEnd) => {
+    const before = {
+      value: textarea.value,
+      start: textarea.selectionStart,
+      end: textarea.selectionEnd
+    };
+
+    setSelection(start, end);
+    insertText(text);
+    setSelection(selectionStart, selectionEnd);
+
+    history.push({
+      before,
+      after: { value: textarea.value, start: selectionStart, end: selectionEnd }
+    });
+
+    if (history.length > HISTORY_SIZE) history.shift();
+  };
+
+  const restoreSelection = evt => {
+    const state = { historyUndo: 'before', historyRedo: 'after' }[evt.inputType];
+    if (!state) return;
+
+    const entry = history.findLast(entry => entry[state].value === textarea.value);
+    if (entry) setSelection(entry[state].start, entry[state].end);
+  };
+
   const handler = evt => {
     if (evt.defaultPrevented || evt.isComposing) return;
 
@@ -117,8 +152,7 @@ export default function autopair(textarea, pairs) {
       if (rule.codeSpan && (inFencedCode(value, start) || !inInlineCode(before))) return;
 
       evt.preventDefault();
-      setSelection(start - 1, start + 1);
-      insertText('');
+      replace(start - 1, start + 1, '', start - 1, start - 1);
 
       return;
     }
@@ -148,8 +182,7 @@ export default function autopair(textarea, pairs) {
     // Wrap selection
     if (!empty) {
       evt.preventDefault();
-      insertText(rule.opening + value.slice(start, end) + rule.closing);
-      setSelection(start + 1, end + 1);
+      replace(start, end, rule.opening + value.slice(start, end) + rule.closing, start + 1, end + 1);
 
       return;
     }
@@ -160,13 +193,14 @@ export default function autopair(textarea, pairs) {
     if (!rule.following.test(after) || rule.preceding?.test(before)) return;
 
     evt.preventDefault();
-    insertText(rule.opening + rule.closing);
-    setSelection(start + 1, start + 1);
+    replace(start, end, rule.opening + rule.closing, start + 1, start + 1);
   };
 
   textarea.addEventListener('keydown', handler);
+  textarea.addEventListener('input', restoreSelection);
 
   return () => {
     textarea.removeEventListener('keydown', handler);
+    textarea.removeEventListener('input', restoreSelection);
   };
 }
