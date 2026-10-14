@@ -429,6 +429,44 @@ describe('autopair', () => {
     cy.get('textarea').should('have.value', 'hello`');
   });
 
+  it('does not autopair a backtick inside a double-backtick code span', () => {
+    cy.visit('/index.html?defaults');
+
+    cy.get('textarea').focus();
+
+    cy.get('textarea').then($el => {
+      $el.val('``code  tail``');
+      $el[0].selectionStart = 7;
+      $el[0].selectionEnd = 7;
+    });
+
+    cy.get('textarea').type('`');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('``code ` tail``');
+      expect($el[0].selectionStart).to.eq(8);
+    });
+  });
+
+  it('types through the closing backticks of a double-backtick code span', () => {
+    cy.visit('/index.html?defaults');
+
+    cy.get('textarea').focus();
+
+    cy.get('textarea').then($el => {
+      $el.val('``code``');
+      $el[0].selectionStart = 6;
+      $el[0].selectionEnd = 6;
+    });
+
+    cy.get('textarea').type('`');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('``code``');
+      expect($el[0].selectionStart).to.eq(7);
+    });
+  });
+
   it('types a code fence and does not autopair backticks inside it', () => {
     cy.visit('/index.html?defaults');
 

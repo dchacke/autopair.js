@@ -65,8 +65,21 @@ const inFencedCode = (value, pos) => {
   return fence !== null || FENCE.test(currentLine);
 };
 
-// Approximates Sublime's inline markup.raw scope
-const inInlineCode = lineBefore => (lineBefore.match(/`/g) || []).length % 2 === 1;
+// Approximates Sublime's inline markup.raw scope. A code span opens with a run
+// of backticks and closes with the next run of the same length.
+const inInlineCode = lineBefore => {
+  let opening = null;
+
+  for (const [run] of lineBefore.matchAll(/`+/g)) {
+    if (opening === null) {
+      opening = run.length;
+    } else if (run.length === opening) {
+      opening = null;
+    }
+  }
+
+  return opening !== null;
+};
 
 // Number of edits whose selection is restored on undo/redo
 const HISTORY_SIZE = 100;
