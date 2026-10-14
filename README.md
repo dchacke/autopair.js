@@ -61,7 +61,7 @@ Call `autopair` once per element.
 
 ### Custom pairings
 
-Custom pairings replace the defaults, so include the ones you want to keep. They also override Sublime's Markdown rules: backticks, asterisks and underscores then close automatically like quotes.
+Custom pairings replace the defaults, so include the ones you want to keep. Backticks, asterisks and underscores keep Sublime’s Markdown rules as long as each one closes with itself. Paired with a different closing character, they close automatically like any other pair.
 
 ```js
 autopair(textarea, {

@@ -367,13 +367,88 @@ describe('autopair', () => {
     cy.get('textarea').should('have.value', ')');
   });
 
-  it('autopairs asterisks when configured', () => {
+  it('only wraps with asterisks when configured', () => {
     cy.visit('/index.html');
+
+    // No autoclose
+    cy.get('textarea').type('*');
+    cy.get('textarea').should('have.value', '*');
+
+    cy.get('textarea').type('{backspace}hello');
+
+    cy.get('textarea').then($el => {
+      $el[0].selectionStart = 0;
+      $el[0].selectionEnd = 5;
+    });
+
+    // Wrap
+    cy.get('textarea').type('*');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('*hello*');
+      expect($el[0].selectionStart).to.eq(1);
+      expect($el[0].selectionEnd).to.eq(6);
+    });
+  });
+
+  it('only wraps with underscores when configured', () => {
+    cy.visit('/index.html');
+
+    // No autoclose
+    cy.get('textarea').type('_');
+    cy.get('textarea').should('have.value', '_');
+
+    cy.get('textarea').type('{backspace}hello');
+
+    cy.get('textarea').then($el => {
+      $el[0].selectionStart = 0;
+      $el[0].selectionEnd = 5;
+    });
+
+    // Wrap
+    cy.get('textarea').type('_');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('_hello_');
+      expect($el[0].selectionStart).to.eq(1);
+      expect($el[0].selectionEnd).to.eq(6);
+    });
+  });
+
+  it('does not autopair a backtick inside a code fence when configured', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').type('```\n`');
+
+    cy.get('textarea').should('have.value', '```\n`');
+  });
+
+  it('does not autopair a backtick inside a code span when configured', () => {
+    cy.visit('/index.html');
+
+    cy.get('textarea').focus();
+
+    cy.get('textarea').then($el => {
+      $el.val('`code  tail`');
+      $el[0].selectionStart = 6;
+      $el[0].selectionEnd = 6;
+    });
+
+    cy.get('textarea').type('`');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('`code ` tail`');
+      expect($el[0].selectionStart).to.eq(7);
+    });
+  });
+
+  it('autopairs asterisks configured with a different closing character', () => {
+    cy.visit(`/index.html?pairs=${encodeURIComponent(JSON.stringify({ '*': '+' }))}`);
 
     cy.get('textarea').type('*');
 
     cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('**');
+      expect($el.val()).to.eq('*+');
       expect($el[0].selectionStart).to.eq(1);
       expect($el[0].selectionEnd).to.eq(1);
     });

@@ -3,7 +3,8 @@
 // for backticks, asterisks and underscores. Regexes are copied from those
 // keymaps. Like Sublime's preceding_text/following_text, they are tested
 // against the text between the caret and the start/end of its line.
-// Custom pairs override the Markdown package's rules.
+// The Markdown package's rules only apply to backticks, asterisks and
+// underscores that close with themselves.
 
 const QUOTE_FOLLOWING = /^(?:\t| |\)|]|\}|>|$)/;
 const BRACKET_FOLLOWING = /^(?:\t| |\)|]|;|\}|$)/;
@@ -96,12 +97,13 @@ const DEFAULT_PAIRS = {
 };
 
 export default function autopair(textarea, pairs) {
-  const sublimeRules = pairs
-    ? DEFAULT_PACKAGE_RULES
-    : { ...DEFAULT_PACKAGE_RULES, ...MARKDOWN_PACKAGE_RULES };
+  const ruleFor = (opening, closing) =>
+    (closing === DEFAULT_PAIRS[opening] && MARKDOWN_PACKAGE_RULES[opening])
+    || DEFAULT_PACKAGE_RULES[opening]
+    || genericRule(opening, closing);
   const rules = new Map(Object.entries(pairs || DEFAULT_PAIRS).map(([opening, closing]) => [
     opening,
-    { opening, closing, ...(sublimeRules[opening] || genericRule(opening, closing)) }
+    { opening, closing, ...ruleFor(opening, closing) }
   ]));
   const rulesByClosing = new Map([...rules.values()].map(rule => [rule.closing, rule]));
 
