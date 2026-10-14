@@ -12,7 +12,7 @@ Behaves like Sublime Text's auto-pairing in Markdown mode.
 
    ![Automatically close parentheses](./images/autoclose.gif)
 
-2. Wraps selected text. For example, selecting a word and hitting `(` will wrap the word in parentheses. By default, asterisks and underscores only wrap selected text; they are not closed automatically.
+2. Wraps selected text. For example, selecting a word and hitting `(` will wrap the word in parentheses. Asterisks and underscores only wrap selected text; they are not closed automatically (unless you pair them with a different closing character).
 
    ![Wrap selected text](./images/wrap.gif)
 
@@ -98,4 +98,4 @@ There’s a [Veritula bug bounty program](https://veritula.com/bounties/10) for 
 
 ## Development
 
-Run a webserver and open `index.html`, which uses custom pairings. Open `index.html?defaults` for the default pairings.
+Run a webserver and open `index.html`, which uses custom pairings. Open `index.html?defaults` for the default pairings, or pass other pairings as URL-encoded JSON, like `index.html?pairs=%7B%22*%22%3A%22%2B%22%7D` for `{"*": "+"}`.
