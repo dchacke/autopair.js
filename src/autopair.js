@@ -42,12 +42,14 @@ const genericRule = (opening, closing) => opening === closing
     following: new RegExp(`^(?:\\t| |\\)|]|;|\\}|${escapeRegExp(closing)}|$)`)
   };
 
-const FENCE = /^ {0,3}(`{3,}|~{3,})/;
+// A backtick fence can't be followed by more backticks on its line
+const FENCE = /^ {0,3}(`{3,}(?![^`]*`)|~{3,})/;
 const CLOSING_FENCE = /^ {0,3}(`{3,}|~{3,})[ \t]*$/;
 
 // Approximates Sublime's meta.code-fence scope
 const inFencedCode = (value, pos) => {
-  const lines = value.slice(0, pos).split('\n');
+  const lineEnd = value.indexOf('\n', pos);
+  const lines = value.slice(0, lineEnd === -1 ? value.length : lineEnd).split('\n');
   const currentLine = lines.pop();
   let fence = null;
 

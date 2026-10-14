@@ -576,4 +576,61 @@ describe('autopair', () => {
 
     cy.get('textarea').should('have.value', '```\n`');
   });
+
+  it('does not treat a code span at the start of a line as a code fence', () => {
+    cy.visit('/index.html?defaults');
+
+    cy.get('textarea').focus();
+
+    cy.get('textarea').then($el => {
+      $el.val('```code```\n');
+      $el[0].selectionStart = 11;
+      $el[0].selectionEnd = 11;
+    });
+
+    cy.get('textarea').type('`');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('```code```\n``');
+      expect($el[0].selectionStart).to.eq(12);
+    });
+  });
+
+  it('autopairs a backtick after a code span at the start of a line', () => {
+    cy.visit('/index.html?defaults');
+
+    cy.get('textarea').focus();
+
+    cy.get('textarea').then($el => {
+      $el.val('```code``` ');
+      $el[0].selectionStart = 11;
+      $el[0].selectionEnd = 11;
+    });
+
+    cy.get('textarea').type('`');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('```code``` ``');
+      expect($el[0].selectionStart).to.eq(12);
+    });
+  });
+
+  it('types through the closing backticks of a code span at the start of a line', () => {
+    cy.visit('/index.html?defaults');
+
+    cy.get('textarea').focus();
+
+    cy.get('textarea').then($el => {
+      $el.val('```code```');
+      $el[0].selectionStart = 7;
+      $el[0].selectionEnd = 7;
+    });
+
+    cy.get('textarea').type('`');
+
+    cy.get('textarea').then($el => {
+      expect($el.val()).to.eq('```code```');
+      expect($el[0].selectionStart).to.eq(8);
+    });
+  });
  });
