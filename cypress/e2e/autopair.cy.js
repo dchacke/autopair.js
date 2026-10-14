@@ -542,6 +542,33 @@ describe('autopair', () => {
     });
   });
 
+  [
+    ['a single-backtick code span', '`code  tail`', 6],
+    ['a double-backtick code span', '``code  tail``', 7],
+    ['a triple-backtick code span', 'x ```code  tail```', 10],
+    ['a triple-backtick code span at the start of a line', '```code  tail```', 8],
+    ['a quadruple-backtick code span', 'x ````code  tail````', 11]
+  ].forEach(([span, text, caret]) => {
+    it(`types two backticks inside ${span} without autopairing`, () => {
+      cy.visit('/index.html?defaults');
+
+      cy.get('textarea').focus();
+
+      cy.get('textarea').then($el => {
+        $el.val(text);
+        $el[0].selectionStart = caret;
+        $el[0].selectionEnd = caret;
+      });
+
+      cy.get('textarea').type('``');
+
+      cy.get('textarea').then($el => {
+        expect($el.val()).to.eq(`${text.slice(0, caret)}\`\`${text.slice(caret)}`);
+        expect($el[0].selectionStart).to.eq(caret + 2);
+      });
+    });
+  });
+
   it('types a code fence and does not autopair backticks inside it', () => {
     cy.visit('/index.html?defaults');
 
