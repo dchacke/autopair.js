@@ -84,6 +84,39 @@ const inInlineCode = lineBefore => {
   return opening !== null;
 };
 
+// The selection, and the text between it and the start/end of its line
+const selectionIn = (value, start, end) => {
+  const lineEnd = value.indexOf('\n', end);
+  const before = value.slice(value.lastIndexOf('\n', start - 1) + 1, start);
+  const after = value.slice(end, lineEnd === -1 ? value.length : lineEnd);
+
+  return {
+    value, start, end, before, after,
+    empty: start === end,
+    prevChar: before.slice(-1),
+    nextChar: after[0]
+  };
+};
+
+const inCode = ({ value, start, before }) => inFencedCode(value, start) || inInlineCode(before);
+
+// Whether the caret sits inside a direct pair that backspace deletes whole
+const insidePair = (rule, { value, start, before, empty, prevChar }) => {
+  if (!empty || !rule || rule.wrapOnly || prevChar !== rule.opening) return false;
+
+  return !rule.codeSpan || (!inFencedCode(value, start) && inInlineCode(before));
+};
+
+// Whether typing `key` moves the caret past an existing closing char
+const typesThrough = (key, rule, { value, start, before, empty, prevChar, nextChar }) => {
+  if (!empty || !rule || rule.wrapOnly || nextChar !== key) return false;
+
+  return !rule.codeSpan || (!inFencedCode(value, start) && (inInlineCode(before) || prevChar === key));
+};
+
+const autocloses = (rule, { before, after }) =>
+  !rule.wrapOnly && rule.following.test(after) && !rule.preceding?.test(before);
+
 // Number of edits whose selection is restored on undo/redo
 const HISTORY_SIZE = 100;
 
@@ -147,70 +180,53 @@ export default function autopair(textarea, pairs) {
     if (entry) setSelection(entry[state].start, entry[state].end);
   };
 
-  const handler = evt => {
-    if (evt.defaultPrevented || evt.isComposing) return;
+  // Backspace inside a direct pair. Sublime binds plain backspace only.
+  const backspace = (evt, selection) => {
+    if (evt.shiftKey || evt.ctrlKey || evt.altKey || evt.metaKey) return;
+    if (!insidePair(rulesByClosing.get(selection.nextChar), selection)) return;
 
-    const { selectionStart: start, selectionEnd: end, value } = textarea;
-    const lineEnd = value.indexOf('\n', end);
-    const before = value.slice(value.lastIndexOf('\n', start - 1) + 1, start);
-    const after = value.slice(end, lineEnd === -1 ? value.length : lineEnd);
-    const empty = start === end;
-    const prevChar = before.slice(-1);
-    const nextChar = after[0];
-    const inCode = () => inFencedCode(value, start) || inInlineCode(before);
+    const { start } = selection;
 
-    // Backspace inside a direct pair. Sublime binds plain backspace only.
-    if (evt.key === 'Backspace') {
-      if (!empty || evt.shiftKey || evt.ctrlKey || evt.altKey || evt.metaKey) return;
+    evt.preventDefault();
+    replace(start - 1, start + 1, '', start - 1, start - 1);
+  };
 
-      const rule = rulesByClosing.get(nextChar);
+  const type = (evt, selection) => {
+    // Leave shortcuts alone, but not AltGr (reported as Ctrl+Alt on Windows)
+    if (evt.metaKey || (evt.ctrlKey && !evt.altKey)) return;
 
-      if (!rule || rule.wrapOnly || prevChar !== rule.opening) return;
-      if (rule.codeSpan && (inFencedCode(value, start) || !inInlineCode(before))) return;
+    const { value, start, end, empty } = selection;
 
+    if (typesThrough(evt.key, rulesByClosing.get(evt.key), selection)) {
       evt.preventDefault();
-      replace(start - 1, start + 1, '', start - 1, start - 1);
+      setSelection(end + 1, end + 1);
 
       return;
     }
 
-    // Leave shortcuts alone, but not AltGr (reported as Ctrl+Alt on Windows)
-    if (evt.metaKey || (evt.ctrlKey && !evt.altKey)) return;
-
-    // Typethrough: move cursor past an existing closing char
-    const closingRule = rulesByClosing.get(evt.key);
-
-    if (empty && closingRule && !closingRule.wrapOnly && nextChar === evt.key) {
-      const typesThrough = closingRule.codeSpan
-        ? !inFencedCode(value, start) && (inInlineCode(before) || prevChar === evt.key)
-        : true;
-
-      if (typesThrough) {
-        evt.preventDefault();
-        setSelection(end + 1, end + 1);
-
-        return;
-      }
-    }
-
     const rule = rules.get(evt.key);
-    if (!rule || (rule.notInCode && inCode())) return;
+    if (!rule || (rule.notInCode && inCode(selection))) return;
 
     // Wrap selection
     if (!empty) {
       evt.preventDefault();
       replace(start, end, rule.opening + value.slice(start, end) + rule.closing, start + 1, end + 1);
-
-      return;
+    } else if (autocloses(rule, selection)) {
+      evt.preventDefault();
+      replace(start, end, rule.opening + rule.closing, start + 1, start + 1);
     }
+  };
 
-    if (rule.wrapOnly) return;
+  const handler = evt => {
+    if (evt.defaultPrevented || evt.isComposing) return;
 
-    // Autoclose
-    if (!rule.following.test(after) || rule.preceding?.test(before)) return;
+    const selection = selectionIn(textarea.value, textarea.selectionStart, textarea.selectionEnd);
 
-    evt.preventDefault();
-    replace(start, end, rule.opening + rule.closing, start + 1, start + 1);
+    if (evt.key === 'Backspace') {
+      backspace(evt, selection);
+    } else {
+      type(evt, selection);
+    }
   };
 
   textarea.addEventListener('keydown', handler);
