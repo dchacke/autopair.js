@@ -1,424 +1,265 @@
+const type = keys => cy.get('textarea').type(keys);
+
+// Sets the caret, or the selection from start to end
+const select = (start, end = start) => {
+  cy.get('textarea').then($el => {
+    $el[0].selectionStart = start;
+    $el[0].selectionEnd = end;
+  });
+};
+
+// Replaces the text without autopairing, then sets the caret or selection
+const setText = (text, start, end = start) => {
+  cy.get('textarea').focus();
+  cy.get('textarea').then($el => $el.val(text));
+  select(start, end);
+};
+
+// Checks the text and the caret, or the selection from start to end
+const expectText = (text, start, end = start) => {
+  cy.get('textarea').then($el => {
+    expect($el.val()).to.eq(text);
+    expect($el[0].selectionStart).to.eq(start);
+    expect($el[0].selectionEnd).to.eq(end);
+  });
+};
+
+const undo = () => cy.document().then(doc => doc.execCommand('undo'));
+const redo = () => cy.document().then(doc => doc.execCommand('redo'));
+
 describe('autopair', () => {
   it('wraps selected text in parentheses when "(" is typed', () => {
     cy.visit('/index.html');
 
-    // Type some text
-    cy.get('textarea').type('hello');
+    type('hello');
+    select(0, 5);
+    type('(');
 
-    // Select all text
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = 0;
-      $el[0].selectionEnd = $el.val().length;
-    });
-
-    // Type "(" to wrap selection
-    cy.get('textarea').type('(');
-
-    // Check result
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('(hello)');
-      expect($el[0].selectionStart).to.eq(1);
-      expect($el[0].selectionEnd).to.eq(6);
-    });
+    expectText('(hello)', 1, 6);
   });
 
   it('types through closing character', () => {
     cy.visit('/index.html');
 
-    // Type a pair
-    cy.get('textarea').type('()');
+    type('()');
+    select(1);
+    type(')');
 
-    // Move cursor between the parentheses
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = 1;
-      $el[0].selectionEnd = 1;
-    });
-
-    // Type ")" to test typethrough
-    cy.get('textarea').type(')');
-
-    // Value should be unchanged, cursor moves past
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('()');
-      expect($el[0].selectionStart).to.eq(2); // cursor after )
-      expect($el[0].selectionEnd).to.eq(2);
-    });
+    // Value is unchanged, cursor moves past )
+    expectText('()', 2);
   });
 
   it('atomically deletes a pair', () => {
     cy.visit('/index.html');
 
-    // Type a pair
-    cy.get('textarea').type('()');
+    type('()');
+    select(1);
+    type('{backspace}');
 
-    // Move cursor between the parentheses
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = 1;
-      $el[0].selectionEnd = 1;
-    });
-
-    // Press Backspace
-    cy.get('textarea').type('{backspace}');
-
-    // Both characters should be deleted
+    // Both characters are deleted
     cy.get('textarea').should('have.value', '');
   });
 
   it('automatically inserts closing parenthesis when "(" is typed', () => {
     cy.visit('/index.html');
 
-    // Type opening parenthesis
-    cy.get('textarea').type('(');
+    type('(');
 
-    // Should insert closing parenthesis and place cursor between
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('()');
-      expect($el[0].selectionStart).to.eq(1);
-      expect($el[0].selectionEnd).to.eq(1);
-    });
+    expectText('()', 1);
   });
 
   it('autopairs before a whitelisted character', () => {
     cy.visit('/index.html');
 
-    // Type a semicolon
-    cy.get('textarea').type(';');
+    type(';');
+    select(0);
+    type('(');
 
-    // Move cursor before the semicolon
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = 0;
-      $el[0].selectionEnd = 0;
-    });
-
-    // Type "("
-    cy.get('textarea').type('(');
-
-    // Should autopair
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('();');
-      expect($el[0].selectionStart).to.eq(1);
-      expect($el[0].selectionEnd).to.eq(1);
-    });
+    expectText('();', 1);
   });
 
   it('does not autopair before a non-whitelisted character', () => {
     cy.visit('/index.html');
 
-    // Type a period
-    cy.get('textarea').type('.');
+    type('.');
+    select(0);
+    type('(');
 
-    // Move cursor before the period
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = 0;
-      $el[0].selectionEnd = 0;
-    });
-
-    // Type "("
-    cy.get('textarea').type('(');
-
-    // Should NOT autopair
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('(.');
-      expect($el[0].selectionStart).to.eq(1);
-      expect($el[0].selectionEnd).to.eq(1);
-    });
+    expectText('(.', 1);
   });
 
   it('autopairs multiple opening parentheses correctly', () => {
     cy.visit('/index.html');
 
-    // Type three opening parentheses
-    cy.get('textarea').type('(((');
+    type('(((');
 
-    // Should result in three closing parentheses as well
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('((()))');
-      expect($el[0].selectionStart).to.eq(3); // cursor inside the innermost pair
-      expect($el[0].selectionEnd).to.eq(3);
-    });
+    // Cursor inside the innermost pair
+    expectText('((()))', 3);
   });
 
   it('does not autopair symmetric characters after an existing pair', () => {
     cy.visit('/index.html');
 
-    // Type a single quote
-    cy.get('textarea').type("'");
+    type("'");
+    expectText("''", 1);
 
-    // Should autopair to ''
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq("''");
-      expect($el[0].selectionStart).to.eq(1); // cursor inside
-      expect($el[0].selectionEnd).to.eq(1);
-    });
-
-    // Move cursor to the end
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = $el.val().length;
-      $el[0].selectionEnd = $el.val().length;
-    });
-
-    // Type another single quote
-    cy.get('textarea').type("'");
-
-    // Should NOT autopair again
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq("'''");
-      expect($el[0].selectionStart).to.eq(3); // cursor after last '
-      expect($el[0].selectionEnd).to.eq(3);
-    });
+    // Another quote at the end doesn't autopair again
+    select(2);
+    type("'");
+    expectText("'''", 3);
   });
 
   it('autopairs existing custom quotes “ and ”', () => {
     cy.visit('/index.html');
 
-    // Type opening custom quote
-    cy.get('textarea').type('“');
+    type('“');
 
-    // Should autopair to “”
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('“”');
-      expect($el[0].selectionStart).to.eq(1); // cursor inside
-      expect($el[0].selectionEnd).to.eq(1);
-    });
+    expectText('“”', 1);
   });
 
   it('supports undo and redo after typing a pair', () => {
     cy.visit('/index.html');
 
-    // Type a pair
-    cy.get('textarea').type('()');
+    type('()');
 
-    // Undo
-    cy.get('textarea').then($el => {
-      $el[0].ownerDocument.execCommand('undo');
-    });
+    undo();
     cy.get('textarea').should('have.value', '');
 
-    // Redo
-    cy.get('textarea').then($el => {
-      $el[0].ownerDocument.execCommand('redo');
-    });
+    redo();
     cy.get('textarea').should('have.value', '()');
   });
 
   it('restores the cursor inside a pair on redo', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').type('(');
+    type('(');
+    undo();
+    redo();
 
-    cy.get('textarea').then($el => {
-      $el[0].ownerDocument.execCommand('undo');
-      $el[0].ownerDocument.execCommand('redo');
-
-      expect($el.val()).to.eq('()');
-      expect($el[0].selectionStart).to.eq(1);
-      expect($el[0].selectionEnd).to.eq(1);
-    });
+    expectText('()', 1);
   });
 
   it('restores the wrapped selection on redo', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').type('hello');
+    type('hello');
+    select(0, 5);
+    type('(');
+    undo();
+    redo();
 
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = 0;
-      $el[0].selectionEnd = 5;
-    });
-
-    cy.get('textarea').type('(');
-
-    cy.get('textarea').then($el => {
-      $el[0].ownerDocument.execCommand('undo');
-      $el[0].ownerDocument.execCommand('redo');
-
-      expect($el.val()).to.eq('(hello)');
-      expect($el[0].selectionStart).to.eq(1);
-      expect($el[0].selectionEnd).to.eq(6);
-    });
+    expectText('(hello)', 1, 6);
   });
 
   it('restores the cursor inside a deleted pair on undo', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').type('({backspace}');
+    type('({backspace}');
+    undo();
 
-    cy.get('textarea').then($el => {
-      $el[0].ownerDocument.execCommand('undo');
-
-      expect($el.val()).to.eq('()');
-      expect($el[0].selectionStart).to.eq(1);
-      expect($el[0].selectionEnd).to.eq(1);
-    });
+    expectText('()', 1);
   });
 
   it('does not autopair a symmetric character behind a word character', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').type('hello');
-    cy.get('textarea').type("'");
+    type('hello');
+    type("'");
 
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq("hello'");
-      expect($el[0].selectionStart).to.eq(6);
-      expect($el[0].selectionEnd).to.eq(6);
-    });
+    expectText("hello'", 6);
   });
 
   it('does autopair a symmetric character behind a non-word character', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').type('hello.');
-    cy.get('textarea').type("'");
+    type('hello.');
+    type("'");
 
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq("hello.''");
-      expect($el[0].selectionStart).to.eq(7);
-      expect($el[0].selectionEnd).to.eq(7);
-    });
+    expectText("hello.''", 7);
   });
 
   it('does autopair a symmetric character behind a newline', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').type('\n');
-    cy.get('textarea').type("'");
+    type('\n');
+    type("'");
 
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq("\n''");
-      expect($el[0].selectionStart).to.eq(2);
-      expect($el[0].selectionEnd).to.eq(2);
-    });
+    expectText("\n''", 2);
   });
 
   it('does autopair an asymmetric character behind a word character', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').type('hello');
-    cy.get('textarea').type('(');
+    type('hello');
+    type('(');
 
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('hello()');
-      expect($el[0].selectionStart).to.eq(6);
-      expect($el[0].selectionEnd).to.eq(6);
-    });
+    expectText('hello()', 6);
   });
 
   it('does not autopair a curly brace before a semicolon', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').type(';');
+    type(';');
+    select(0);
+    type('{{}');
 
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = 0;
-      $el[0].selectionEnd = 0;
-    });
-
-    cy.get('textarea').type('{{}');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('{;');
-      expect($el[0].selectionStart).to.eq(1);
-    });
+    expectText('{;', 1);
   });
 
   it('does not autopair a quote before a semicolon', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').type(';');
+    type(';');
+    select(0);
+    type('"');
 
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = 0;
-      $el[0].selectionEnd = 0;
-    });
-
-    cy.get('textarea').type('"');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('";');
-      expect($el[0].selectionStart).to.eq(1);
-    });
+    expectText('";', 1);
   });
 
   it('autopairs a quote before an angle bracket', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').type('>');
+    type('>');
+    select(0);
+    type('"');
 
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = 0;
-      $el[0].selectionEnd = 0;
-    });
-
-    cy.get('textarea').type('"');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('"">');
-      expect($el[0].selectionStart).to.eq(1);
-    });
+    expectText('"">', 1);
   });
 
   it('does not delete a pair on backspace with a modifier', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').type('(');
-    cy.get('textarea').type('{ctrl}{backspace}');
+    type('(');
+    type('{ctrl}{backspace}');
 
     cy.get('textarea').should('have.value', ')');
   });
 
-  it('only wraps with asterisks when configured', () => {
-    cy.visit('/index.html');
+  [
+    ['only wraps with asterisks when configured', '/index.html', '*'],
+    ['only wraps with underscores when configured', '/index.html', '_'],
+    ['only wraps with asterisks by default', '/index.html?defaults', '*']
+  ].forEach(([name, page, char]) => {
+    it(name, () => {
+      cy.visit(page);
 
-    // No autoclose
-    cy.get('textarea').type('*');
-    cy.get('textarea').should('have.value', '*');
+      // No autoclose
+      type(char);
+      cy.get('textarea').should('have.value', char);
 
-    cy.get('textarea').type('{backspace}hello');
+      type('{backspace}hello');
+      select(0, 5);
 
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = 0;
-      $el[0].selectionEnd = 5;
-    });
-
-    // Wrap
-    cy.get('textarea').type('*');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('*hello*');
-      expect($el[0].selectionStart).to.eq(1);
-      expect($el[0].selectionEnd).to.eq(6);
-    });
-  });
-
-  it('only wraps with underscores when configured', () => {
-    cy.visit('/index.html');
-
-    // No autoclose
-    cy.get('textarea').type('_');
-    cy.get('textarea').should('have.value', '_');
-
-    cy.get('textarea').type('{backspace}hello');
-
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = 0;
-      $el[0].selectionEnd = 5;
-    });
-
-    // Wrap
-    cy.get('textarea').type('_');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('_hello_');
-      expect($el[0].selectionStart).to.eq(1);
-      expect($el[0].selectionEnd).to.eq(6);
+      // Wrap
+      type(char);
+      expectText(`${char}hello${char}`, 1, 6);
     });
   });
 
   it('does not autopair a backtick inside a code fence when configured', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').type('```\n`');
+    type('```\n`');
 
     cy.get('textarea').should('have.value', '```\n`');
   });
@@ -426,80 +267,34 @@ describe('autopair', () => {
   it('does not autopair a backtick inside a code span when configured', () => {
     cy.visit('/index.html');
 
-    cy.get('textarea').focus();
+    setText('`code  tail`', 6);
+    type('`');
 
-    cy.get('textarea').then($el => {
-      $el.val('`code  tail`');
-      $el[0].selectionStart = 6;
-      $el[0].selectionEnd = 6;
-    });
-
-    cy.get('textarea').type('`');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('`code ` tail`');
-      expect($el[0].selectionStart).to.eq(7);
-    });
+    expectText('`code ` tail`', 7);
   });
 
   it('autopairs asterisks configured with a different closing character', () => {
     cy.visit(`/index.html?pairs=${encodeURIComponent(JSON.stringify({ '*': '+' }))}`);
 
-    cy.get('textarea').type('*');
+    type('*');
 
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('*+');
-      expect($el[0].selectionStart).to.eq(1);
-      expect($el[0].selectionEnd).to.eq(1);
-    });
-  });
-
-  it('only wraps with asterisks by default', () => {
-    cy.visit('/index.html?defaults');
-
-    // No autoclose
-    cy.get('textarea').type('*');
-    cy.get('textarea').should('have.value', '*');
-
-    cy.get('textarea').type('{backspace}hello');
-
-    cy.get('textarea').then($el => {
-      $el[0].selectionStart = 0;
-      $el[0].selectionEnd = 5;
-    });
-
-    // Wrap
-    cy.get('textarea').type('*');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('*hello*');
-      expect($el[0].selectionStart).to.eq(1);
-      expect($el[0].selectionEnd).to.eq(6);
-    });
+    expectText('*+', 1);
   });
 
   it('autopairs backticks and types through them', () => {
     cy.visit('/index.html?defaults');
 
-    cy.get('textarea').type('`');
+    type('`');
+    expectText('``', 1);
 
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('``');
-      expect($el[0].selectionStart).to.eq(1);
-    });
-
-    cy.get('textarea').type('code`');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('`code`');
-      expect($el[0].selectionStart).to.eq(6);
-    });
+    type('code`');
+    expectText('`code`', 6);
   });
 
   it('does not autopair a backtick behind a word character', () => {
     cy.visit('/index.html?defaults');
 
-    cy.get('textarea').type('hello`');
+    type('hello`');
 
     cy.get('textarea').should('have.value', 'hello`');
   });
@@ -507,39 +302,19 @@ describe('autopair', () => {
   it('does not autopair a backtick inside a double-backtick code span', () => {
     cy.visit('/index.html?defaults');
 
-    cy.get('textarea').focus();
+    setText('``code  tail``', 7);
+    type('`');
 
-    cy.get('textarea').then($el => {
-      $el.val('``code  tail``');
-      $el[0].selectionStart = 7;
-      $el[0].selectionEnd = 7;
-    });
-
-    cy.get('textarea').type('`');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('``code ` tail``');
-      expect($el[0].selectionStart).to.eq(8);
-    });
+    expectText('``code ` tail``', 8);
   });
 
   it('types through the closing backticks of a double-backtick code span', () => {
     cy.visit('/index.html?defaults');
 
-    cy.get('textarea').focus();
+    setText('``code``', 6);
+    type('`');
 
-    cy.get('textarea').then($el => {
-      $el.val('``code``');
-      $el[0].selectionStart = 6;
-      $el[0].selectionEnd = 6;
-    });
-
-    cy.get('textarea').type('`');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('``code``');
-      expect($el[0].selectionStart).to.eq(7);
-    });
+    expectText('``code``', 7);
   });
 
   [
@@ -552,27 +327,17 @@ describe('autopair', () => {
     it(`types two backticks inside ${span} without autopairing`, () => {
       cy.visit('/index.html?defaults');
 
-      cy.get('textarea').focus();
+      setText(text, caret);
+      type('``');
 
-      cy.get('textarea').then($el => {
-        $el.val(text);
-        $el[0].selectionStart = caret;
-        $el[0].selectionEnd = caret;
-      });
-
-      cy.get('textarea').type('``');
-
-      cy.get('textarea').then($el => {
-        expect($el.val()).to.eq(`${text.slice(0, caret)}\`\`${text.slice(caret)}`);
-        expect($el[0].selectionStart).to.eq(caret + 2);
-      });
+      expectText(`${text.slice(0, caret)}\`\`${text.slice(caret)}`, caret + 2);
     });
   });
 
   it('types a code fence and does not autopair backticks inside it', () => {
     cy.visit('/index.html?defaults');
 
-    cy.get('textarea').type('```\n`');
+    type('```\n`');
 
     cy.get('textarea').should('have.value', '```\n`');
   });
@@ -580,57 +345,27 @@ describe('autopair', () => {
   it('does not treat a code span at the start of a line as a code fence', () => {
     cy.visit('/index.html?defaults');
 
-    cy.get('textarea').focus();
+    setText('```code```\n', 11);
+    type('`');
 
-    cy.get('textarea').then($el => {
-      $el.val('```code```\n');
-      $el[0].selectionStart = 11;
-      $el[0].selectionEnd = 11;
-    });
-
-    cy.get('textarea').type('`');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('```code```\n``');
-      expect($el[0].selectionStart).to.eq(12);
-    });
+    expectText('```code```\n``', 12);
   });
 
   it('autopairs a backtick after a code span at the start of a line', () => {
     cy.visit('/index.html?defaults');
 
-    cy.get('textarea').focus();
+    setText('```code``` ', 11);
+    type('`');
 
-    cy.get('textarea').then($el => {
-      $el.val('```code``` ');
-      $el[0].selectionStart = 11;
-      $el[0].selectionEnd = 11;
-    });
-
-    cy.get('textarea').type('`');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('```code``` ``');
-      expect($el[0].selectionStart).to.eq(12);
-    });
+    expectText('```code``` ``', 12);
   });
 
   it('types through the closing backticks of a code span at the start of a line', () => {
     cy.visit('/index.html?defaults');
 
-    cy.get('textarea').focus();
+    setText('```code```', 7);
+    type('`');
 
-    cy.get('textarea').then($el => {
-      $el.val('```code```');
-      $el[0].selectionStart = 7;
-      $el[0].selectionEnd = 7;
-    });
-
-    cy.get('textarea').type('`');
-
-    cy.get('textarea').then($el => {
-      expect($el.val()).to.eq('```code```');
-      expect($el[0].selectionStart).to.eq(8);
-    });
+    expectText('```code```', 8);
   });
- });
+});
